@@ -1,0 +1,18 @@
+[project]
+name = "contest202510"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.13"
+dependencies = [
+    "langchain>=0.3.27",
+    "langchain-chroma>=0.2.6",
+    "langchain-cohere>=0.4.6",
+    "langchain-community>=0.3.31",
+    "langchain-openai>=0.3.35",
+    "markdown>=3.9",
+    "pypdf>=6.1.1",
+    "python-dotenv>=1.1.1",
+    "python-pptx>=1.0.2",
+    "streamlit>=1.50.0",
+    "unstructured>=0.18.15",
+]

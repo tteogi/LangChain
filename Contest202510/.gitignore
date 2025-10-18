@@ -1,0 +1,9 @@
+.env
+__pycache__/
+*.pyc
+.DS_Store
+.streamlit/
+*.pdf
+*.md
+uploads/
+chroma_db/
