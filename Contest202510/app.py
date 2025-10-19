@@ -7,7 +7,30 @@ from vector_store import VectorStoreManager
 
 load_dotenv()
 
-st.set_page_config(page_title="챗봇", page_icon="🤖", layout="wide")
+APP_TITLE = os.getenv("APP_TITLE", "문서 기반 질의응답 챗봇")
+
+st.set_page_config(page_title=APP_TITLE, page_icon="🤖", layout="wide")
+
+header_container = st.container()
+
+with header_container:
+    st.markdown(
+        f"""
+        <style>
+        .stContainer {{
+            position: sticky;
+            top: 0;
+            background-color: white;
+            z-index: 999;
+            padding-top: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #f0f2f6;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+    st.title(f"🤖 {APP_TITLE}")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -19,9 +42,9 @@ if "vectorstore_manager" not in st.session_state:
 if "documents_loaded" not in st.session_state:
     st.session_state.documents_loaded = False
 
-st.title("🤖 문서 기반 질의응답 챗봇")
-
 with st.sidebar:
+    st.title(f"🤖 {APP_TITLE}")
+    st.divider()
     st.header("설정")
 
     model_type = st.selectbox("모델 유형", ["OpenAI", "Ollama"])
