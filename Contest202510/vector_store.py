@@ -95,11 +95,11 @@ class VectorStoreManager:
         if model_type == "OpenAI":
             if openai_api_key:
                 os.environ["OPENAI_API_KEY"] = openai_api_key
-            return ChatOpenAI(model=model_name, temperature=0.2, streaming=streaming)
+            return ChatOpenAI(model=model_name, temperature=0, streaming=streaming)
         elif model_type == "Claude":
             if anthropic_api_key:
                 os.environ["ANTHROPIC_API_KEY"] = anthropic_api_key
-            return ChatAnthropic(model=model_name, temperature=0.2, streaming=streaming)
+            return ChatAnthropic(model=model_name, temperature=0, streaming=streaming)
         else:
             return Ollama(model=model_name, temperature=0.5)
 
@@ -132,21 +132,30 @@ class VectorStoreManager:
 6. 추측하지 말고 문서에 명시된 내용만 답변하세요
 7. 친근하고 자연스러운 말투를 사용하세요
 
-**비교/분석 질문 처리 방법:**
-- "가장 저렴한", "가장 빠른", "어떤 것이 좋은" 등 비교 질문의 경우:
-  1) **필수**: 제공된 문서를 처음부터 끝까지 모두 꼼꼼히 읽으세요
-  2) 모든 옵션의 수치를 리스트로 작성한 후 비교하세요
-  3) **특히 "가장 저렴한" 질문의 경우**:
-     - 비율 수수료(%)는 가장 낮은 %를 찾으세요 (예: 3%가 최저면 3% 항목 모두 찾기)
-     - 고정 수수료(원)는 가장 낮은 금액을 찾으세요 (예: 1,000원이 최저면 1,000원 항목 모두 찾기)
-     - **암호화폐, 페이코인, 신용카드, 전용계좌, 케이뱅크 등 빠뜨리지 마세요**
-  4) **중요**: 동일한 수수료를 가진 방법이 여러 개 있다면 모두 나열하세요
-     - 예: "암호화폐 3%, 페이코인 3%" (둘 다 3%이지만 모두 언급)
-     - 예: "전용계좌 1,000원, 케이뱅크 페이 1,000원" (둘 다 나열)
-  5) 고정 금액(예: 1,000원)과 비율(예: 3%)이 섞여 있다면:
-     - 충전 금액에 따라 달라진다는 점을 설명하세요
-     - 구체적인 기준 금액을 계산하여 제시하세요 (예: "33,333원 기준으로...")
-  6) 가능한 한 구조화된 형식으로 답변하세요
+**비교/분석 질문 처리 방법 (매우 중요!):**
+
+질문이 "가장 저렴한", "최저 수수료" 등 비교를 요구하는 경우 다음 절차를 반드시 따르세요:
+
+STEP 1: 제공된 모든 문서에서 수수료 정보 추출
+- 문서를 처음부터 끝까지 하나씩 읽으면서 모든 수수료를 표로 정리
+- 예시 표:
+  충전방법 | 수수료
+  암호화폐 | 3%
+  페이코인 | 3%
+  신용카드 | 5.5%
+  ...
+
+STEP 2: 최저값 찾기
+- 비율 수수료(%) 중 가장 낮은 값 찾기
+- 고정 수수료(원) 중 가장 낮은 값 찾기
+
+STEP 3: 최저값에 해당하는 모든 방법 나열
+- 3%가 최저라면: 3%인 방법을 모두 찾아서 나열
+- 1,000원이 최저라면: 1,000원인 방법을 모두 찾아서 나열
+
+STEP 4: 답변 작성
+- "암호화폐"와 "페이코인"을 절대 빠뜨리지 마세요
+- 비율 수수료와 고정 수수료를 비교 설명 (예: 33,333원 기준)
 
 문서 내용:
 {context}

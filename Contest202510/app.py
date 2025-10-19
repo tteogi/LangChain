@@ -208,21 +208,31 @@ if prompt := st.chat_input("질문을 입력하세요"):
                             st.caption(f"⏱️ 처리 시간: {total_time:.2f}초")
 
                             if result.get("source_documents"):
-                                with st.expander("참조 문서"):
-                                    for i, doc in enumerate(result["source_documents"]):
-                                        source_file = doc.metadata.get(
-                                            "source", "알 수 없음"
-                                        )
+                                with st.expander(f"📚 참조 문서 ({len(result['source_documents'])}개)"):
+                                    # FAQ 카테고리 추출
+                                    categories = set()
+                                    for doc in result["source_documents"]:
+                                        category = doc.metadata.get("category", "")
+                                        if category:
+                                            categories.add(category)
+
+                                    if categories:
+                                        st.info(f"**검색된 FAQ 카테고리:** {', '.join(sorted(categories)[:10])}" + ("..." if len(categories) > 10 else ""))
+
+                                    for i, doc in enumerate(result["source_documents"][:10]):  # 처음 10개만 표시
+                                        source_file = doc.metadata.get("source", "알 수 없음")
+                                        category = doc.metadata.get("category", "")
                                         page = doc.metadata.get("page", "")
-                                        st.markdown(
-                                            f"**출처 {i+1}:** {source_file}"
-                                            + (
-                                                f" (페이지 {page + 1})"
-                                                if page != ""
-                                                else ""
+
+                                        if category:
+                                            st.markdown(f"**{i+1}. [{category}]**")
+                                        else:
+                                            st.markdown(
+                                                f"**출처 {i+1}:** {source_file}"
+                                                + (f" (페이지 {page + 1})" if page != "" else "")
                                             )
-                                        )
-                                        st.markdown(doc.page_content[:300] + "...")
+                                        st.markdown(doc.page_content[:200] + "...")
+                                        st.divider()
                     else:
                         response = "문서 처리에 문제가 있는 것 같아요. 문서를 다시 업로드해보시겠어요?"
                         st.markdown(response)
