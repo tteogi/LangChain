@@ -66,12 +66,11 @@ class VectorStoreManager:
 
         if is_comparison:
             # 비교/분석 질문: 더 많은 문서 검색
+            # MMR 대신 similarity 사용 - 유사한 항목(암호화폐 3%, 페이코인 3%)도 모두 포함
             retriever = self.vectorstore.as_retriever(
-                search_type="mmr",
+                search_type="similarity",
                 search_kwargs={
-                    "k": 25,         # 18개 반환 (속도와 정확도 균형)
-                    "fetch_k": 40,   # 40개 후보 검색
-                    "lambda_mult": 0.9  # 유사도 우선
+                    "k": 25  # 25개 검색 (충전 수수료 29개 중 대부분 포함)
                 }
             )
         else:

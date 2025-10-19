@@ -52,22 +52,29 @@ with st.sidebar:
     if model_type == "Claude":
         openai_api_key = None
         anthropic_api_key = st.text_input(
-            "Anthropic API Key", type="password", value=os.getenv("ANTHROPIC_API_KEY", "")
+            "Anthropic API Key",
+            type="password",
+            value=os.getenv("ANTHROPIC_API_KEY", ""),
         )
-        model_name = st.selectbox("모델 선택", [
-            "claude-sonnet-4-5-20250929",
-            "claude-3-5-sonnet-20241022",
-            "claude-3-5-haiku-20241022",
-            "claude-3-opus-20240229",
-            "claude-3-sonnet-20240229",
-            "claude-3-haiku-20240307"
-        ])
+        model_name = st.selectbox(
+            "모델 선택",
+            [
+                "claude-sonnet-4-5-20250929",
+                "claude-3-5-sonnet-20241022",
+                "claude-3-5-haiku-20241022",
+                "claude-3-opus-20240229",
+                "claude-3-sonnet-20240229",
+                "claude-3-haiku-20240307",
+            ],
+        )
     elif model_type == "OpenAI":
         openai_api_key = st.text_input(
             "OpenAI API Key", type="password", value=os.getenv("OPENAI_API_KEY", "")
         )
         anthropic_api_key = None
-        model_name = st.selectbox("모델 선택", ["gpt-5", "gpt-5-mini", "gpt-4o", "gpt-4o-mini"])
+        model_name = st.selectbox(
+            "모델 선택", ["gpt-5", "gpt-5-mini", "gpt-4o", "gpt-4o-mini"]
+        )
     else:
         openai_api_key = None
         anthropic_api_key = None
@@ -102,7 +109,9 @@ with st.sidebar:
                                 f"좋아요! 📚 {len(documents)}개의 문서 청크가 준비되었어요. 이제 질문해주세요!"
                             )
                         else:
-                            st.error("문서를 읽을 수 없어요. 파일 형식을 확인해주세요! 📄")
+                            st.error(
+                                "문서를 읽을 수 없어요. 파일 형식을 확인해주세요! 📄"
+                            )
                     except Exception as e:
                         st.error(f"오류가 발생했어요: {str(e)}")
         else:
@@ -142,32 +151,42 @@ if prompt := st.chat_input("질문을 입력하세요"):
             else:
                 try:
                     # 질문 유형 확인
-                    is_comparison = st.session_state.vectorstore_manager._is_comparison_query(prompt)
+                    is_comparison = (
+                        st.session_state.vectorstore_manager._is_comparison_query(
+                            prompt
+                        )
+                    )
 
                     qa_chain = st.session_state.vectorstore_manager.get_qa_chain(
-                        model_name, model_type, openai_api_key, anthropic_api_key, query=prompt
+                        model_name,
+                        model_type,
+                        openai_api_key,
+                        anthropic_api_key,
+                        query=prompt,
                     )
 
                     if qa_chain:
                         start_time = time.time()
 
-                        with st.status("답변을 생성하고 있어요... 🤔", expanded=True) as status:
+                        with st.status(
+                            "답변을 생성하고 있어요... 🤔", expanded=True
+                        ) as status:
                             if is_comparison:
-                                st.write("🔍 비교 질문 감지 - 상세 검색 중... (18개 문서)")
+                                st.write("🔍 비교 질문 감지 - 상세 검색 중...")
                             else:
-                                st.write("📄 단순 질문 - 빠른 검색 중... (5개 문서)")
+                                st.write("📄 단순 질문 - 빠른 검색 중...")
                             search_start = time.time()
-                            
+
                             result = qa_chain.invoke({"query": prompt})
                             response = result["result"]
-                            
+
                             end_time = time.time()
                             total_time = end_time - start_time
-                            
+
                             status.update(
-                                label=f"답변 완료! ✨ (소요시간: {total_time:.2f}초)", 
-                                state="complete", 
-                                expanded=False
+                                label=f"답변 완료! ✨ (소요시간: {total_time:.2f}초)",
+                                state="complete",
+                                expanded=False,
                             )
 
                         if (
@@ -185,15 +204,24 @@ if prompt := st.chat_input("질문을 입력하세요"):
                             )
                         else:
                             st.markdown(response)
-                            
+
                             st.caption(f"⏱️ 처리 시간: {total_time:.2f}초")
 
                             if result.get("source_documents"):
                                 with st.expander("참조 문서"):
                                     for i, doc in enumerate(result["source_documents"]):
-                                        source_file = doc.metadata.get("source", "알 수 없음")
+                                        source_file = doc.metadata.get(
+                                            "source", "알 수 없음"
+                                        )
                                         page = doc.metadata.get("page", "")
-                                        st.markdown(f"**출처 {i+1}:** {source_file}" + (f" (페이지 {page + 1})" if page != "" else ""))
+                                        st.markdown(
+                                            f"**출처 {i+1}:** {source_file}"
+                                            + (
+                                                f" (페이지 {page + 1})"
+                                                if page != ""
+                                                else ""
+                                            )
+                                        )
                                         st.markdown(doc.page_content[:300] + "...")
                     else:
                         response = "문서 처리에 문제가 있는 것 같아요. 문서를 다시 업로드해보시겠어요?"
