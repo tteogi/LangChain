@@ -209,28 +209,60 @@ if prompt := st.chat_input("질문을 입력하세요"):
 
                             if result.get("source_documents"):
                                 with st.expander(f"📚 참조 문서 ({len(result['source_documents'])}개)"):
-                                    # FAQ 카테고리 추출
+                                    # 수수료 정보가 있는 FAQ 추출
+                                    fee_docs = []
                                     categories = set()
                                     for doc in result["source_documents"]:
                                         category = doc.metadata.get("category", "")
                                         if category:
                                             categories.add(category)
 
-                                    if categories:
+                                        fee_display = doc.metadata.get("fee_display")
+                                        if fee_display:
+                                            fee_docs.append({
+                                                "category": category,
+                                                "fee_type": doc.metadata.get("fee_type"),
+                                                "fee_value": doc.metadata.get("fee_value"),
+                                                "fee_display": fee_display
+                                            })
+
+                                    # 수수료 정보 요약 표시
+                                    if fee_docs:
+                                        st.success("**🔍 검색된 수수료 정보:**")
+
+                                        # 비율 수수료 정렬
+                                        percent_fees = [f for f in fee_docs if f["fee_type"] == "percent"]
+                                        percent_fees.sort(key=lambda x: x["fee_value"])
+
+                                        # 고정 수수료 정렬
+                                        fixed_fees = [f for f in fee_docs if f["fee_type"] == "fixed"]
+                                        fixed_fees.sort(key=lambda x: x["fee_value"])
+
+                                        if percent_fees:
+                                            st.markdown("**💰 비율 수수료 (낮은 순):**")
+                                            for f in percent_fees[:5]:
+                                                st.markdown(f"- {f['category']}: **{f['fee_display']}**")
+
+                                        if fixed_fees:
+                                            st.markdown("**💵 고정 수수료 (낮은 순):**")
+                                            for f in fixed_fees[:5]:
+                                                st.markdown(f"- {f['category']}: **{f['fee_display']}**")
+
+                                    elif categories:
                                         st.info(f"**검색된 FAQ 카테고리:** {', '.join(sorted(categories)[:10])}" + ("..." if len(categories) > 10 else ""))
 
-                                    for i, doc in enumerate(result["source_documents"][:10]):  # 처음 10개만 표시
-                                        source_file = doc.metadata.get("source", "알 수 없음")
+                                    st.divider()
+                                    st.markdown("**상세 내용:**")
+                                    for i, doc in enumerate(result["source_documents"][:5]):  # 처음 5개만 표시
                                         category = doc.metadata.get("category", "")
-                                        page = doc.metadata.get("page", "")
+                                        fee_display = doc.metadata.get("fee_display", "")
 
                                         if category:
-                                            st.markdown(f"**{i+1}. [{category}]**")
-                                        else:
-                                            st.markdown(
-                                                f"**출처 {i+1}:** {source_file}"
-                                                + (f" (페이지 {page + 1})" if page != "" else "")
-                                            )
+                                            header = f"**{i+1}. [{category}]**"
+                                            if fee_display:
+                                                header += f" - {fee_display}"
+                                            st.markdown(header)
+
                                         st.markdown(doc.page_content[:200] + "...")
                                         st.divider()
                     else:

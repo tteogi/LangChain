@@ -34,14 +34,36 @@ def parse_faq_markdown(text: str, source_name: str) -> List[Document]:
         # FAQ 전체 내용
         full_content = f"[{category}] {question}\n{answer}"
 
+        # 메타데이터 기본값
+        metadata = {
+            "source": source_name,
+            "category": category,
+            "question": question,
+            "type": "faq"
+        }
+
+        # 수수료 정보 추출 (질문 + 답변에서 "수수료" 키워드가 있는 경우)
+        if "수수료" in question or "수수료" in answer:
+            # 비율 수수료 추출 (예: 3%, 5.5%)
+            percent_match = re.search(r'(\d+(?:\.\d+)?)\s*%', answer)
+            if percent_match:
+                fee_value = float(percent_match.group(1))
+                metadata["fee_type"] = "percent"
+                metadata["fee_value"] = fee_value
+                metadata["fee_display"] = f"{percent_match.group(1)}%"
+            else:
+                # 고정 금액 수수료 추출 (예: 1,000원, 1000원)
+                won_match = re.search(r'(\d+,?\d*)\s*원', answer)
+                if won_match:
+                    fee_str = won_match.group(1).replace(',', '')
+                    fee_value = float(fee_str)
+                    metadata["fee_type"] = "fixed"
+                    metadata["fee_value"] = fee_value
+                    metadata["fee_display"] = f"{won_match.group(1)}원"
+
         doc = Document(
             page_content=full_content,
-            metadata={
-                "source": source_name,
-                "category": category,
-                "question": question,
-                "type": "faq"
-            }
+            metadata=metadata
         )
         documents.append(doc)
 
