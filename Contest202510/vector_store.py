@@ -18,8 +18,8 @@ class VectorStoreManager:
     def __init__(self):
         self.vectorstore: Optional[Chroma] = None
         self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1500,
-            chunk_overlap=400,
+            chunk_size=1000,
+            chunk_overlap=200,
             length_function=len,
             separators=["\n\n", "\n", ". ", " ", ""]
         )
@@ -45,9 +45,10 @@ class VectorStoreManager:
             return None
         
         retriever = self.vectorstore.as_retriever(
-            search_type="similarity",
+            search_type="mmr",
             search_kwargs={
-                "k": 8
+                "k": 5,
+                "fetch_k": 20
             }
         )
         
@@ -59,7 +60,7 @@ class VectorStoreManager:
                 os.environ["OPENAI_API_KEY"] = openai_api_key
             return ChatOpenAI(
                 model=model_name,
-                temperature=0.5,
+                temperature=0.3,
                 streaming=streaming
             )
         else:
@@ -71,15 +72,16 @@ class VectorStoreManager:
         
         llm = self.get_llm(model_name, model_type, openai_api_key, streaming=False)
         
-        prompt_template = """당신은 친절하고 전문적인 AI 어시스턴트입니다. 
-사용자와 자연스럽게 대화하듯이 답변해주세요.
+        prompt_template = """당신은 친절하고 전문적인 고객센터 상담원입니다.
+제공된 문서(FAQ, 가이드 등)를 기반으로 고객의 질문에 정확하게 답변해주세요.
 
-제공된 문서 내용을 참고하여 질문에 답변하되, 다음 사항을 지켜주세요:
-- 친근하고 부드러운 말투를 사용하세요
-- 문서에 있는 정보를 바탕으로 정확하고 구체적으로 설명해주세요
-- 문서의 여러 부분에 관련 정보가 있다면 모두 종합해서 답변하세요
-- 문서에 관련 정보가 전혀 없다면 "NOT_FOUND"라고만 답변하세요
-- 확실하지 않은 내용은 추측하지 말고, 문서에 명시된 내용만 답변하세요
+답변 규칙:
+1. 문서에 있는 정보만 사용하여 정확하고 구체적으로 답변하세요
+2. 수수료, 금액, 시간 등 숫자 정보는 문서 그대로 정확히 전달하세요
+3. 문서의 여러 부분에 관련 정보가 있다면 모두 종합해서 답변하세요
+4. 문서에 관련 정보가 전혀 없으면 "NOT_FOUND"라고만 답변하세요
+5. 추측하지 말고 문서에 명시된 내용만 답변하세요
+6. 친근하고 자연스러운 말투를 사용하세요
 
 문서 내용:
 {context}
