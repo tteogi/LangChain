@@ -172,9 +172,9 @@ if prompt := st.chat_input("질문을 입력하세요"):
                             "답변을 생성하고 있어요... 🤔", expanded=True
                         ) as status:
                             if is_comparison:
-                                st.write("🔍 비교 질문 감지 - 상세 검색 중...")
+                                st.write("🔍 비교 질문 감지 - 전체 검색 중... (30개 문서)")
                             else:
-                                st.write("📄 단순 질문 - 빠른 검색 중...")
+                                st.write("📄 단순 질문 - 빠른 검색 중... (5개 문서)")
                             search_start = time.time()
 
                             result = qa_chain.invoke({"query": prompt})
