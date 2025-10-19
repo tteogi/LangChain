@@ -151,7 +151,7 @@ if prompt := st.chat_input("질문을 입력하세요"):
                             or response.strip() == ""
                             or "NOT_FOUND" in response
                         ):
-                            response = "죄송해요, 업로드하신 문서에서 관련 정보를 찾지 못했어요. 😅 다른 질문을 해보시거나, 더 자세한 정보가 필요하시면 담당자 윤덕열님께 연락해주세요!"
+                            response = "죄송해요, 해당 질문에 대해서는 제가 답변드릴 수 있는 내용이 없습니다. 😅 고객센터 연락처\n Email: help@nexturecorp.com\n! Phone: 02-010-0101\n운영시간: 평일 09:00~18:00"
                             st.markdown(response)
                         else:
                             st.markdown(response)
