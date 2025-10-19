@@ -5,6 +5,7 @@ description = "Add your description here"
 requires-python = ">=3.13"
 dependencies = [
     "langchain>=0.3.27",
+    "langchain-anthropic>=0.3.22",
     "langchain-chroma>=0.2.6",
     "langchain-cohere>=0.4.6",
     "langchain-community>=0.3.31",

@@ -28,7 +28,7 @@ with header_container:
         }}
         </style>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
     st.title(f"🤖 {APP_TITLE}")
 
@@ -47,15 +47,30 @@ with st.sidebar:
     st.divider()
     st.header("설정")
 
-    model_type = st.selectbox("모델 유형", ["OpenAI", "Ollama"])
+    model_type = st.selectbox("모델 유형", ["Claude", "OpenAI", "Ollama"])
 
-    if model_type == "OpenAI":
+    if model_type == "Claude":
+        openai_api_key = None
+        anthropic_api_key = st.text_input(
+            "Anthropic API Key", type="password", value=os.getenv("ANTHROPIC_API_KEY", "")
+        )
+        model_name = st.selectbox("모델 선택", [
+            "claude-sonnet-4-5-20250929",
+            "claude-3-5-sonnet-20241022",
+            "claude-3-5-haiku-20241022",
+            "claude-3-opus-20240229",
+            "claude-3-sonnet-20240229",
+            "claude-3-haiku-20240307"
+        ])
+    elif model_type == "OpenAI":
         openai_api_key = st.text_input(
             "OpenAI API Key", type="password", value=os.getenv("OPENAI_API_KEY", "")
         )
-        model_name = st.selectbox("모델 선택", ["gpt-5", "gpt-5-mini"])
+        anthropic_api_key = None
+        model_name = st.selectbox("모델 선택", ["gpt-5", "gpt-5-mini", "gpt-4o", "gpt-4o-mini"])
     else:
         openai_api_key = None
+        anthropic_api_key = None
         model_name = st.text_input("Ollama 모델 이름", value="llama2")
         st.info("Ollama가 로컬에서 실행 중인지 확인하세요.")
 
@@ -118,20 +133,29 @@ if prompt := st.chat_input("질문을 입력하세요"):
             response = "앗, 아직 문서가 업로드되지 않았어요! 😊 왼쪽 사이드바에서 문서를 먼저 업로드해주시면 질문에 답변해드릴게요."
             st.markdown(response)
         else:
-            if model_type == "OpenAI" and not openai_api_key:
+            if model_type == "Claude" and not anthropic_api_key:
+                response = "Anthropic API 키가 필요해요. 왼쪽 사이드바에서 API 키를 입력해주세요! 🔑"
+                st.markdown(response)
+            elif model_type == "OpenAI" and not openai_api_key:
                 response = "OpenAI API 키가 필요해요. 왼쪽 사이드바에서 API 키를 입력해주세요! 🔑"
                 st.markdown(response)
             else:
                 try:
+                    # 질문 유형 확인
+                    is_comparison = st.session_state.vectorstore_manager._is_comparison_query(prompt)
+
                     qa_chain = st.session_state.vectorstore_manager.get_qa_chain(
-                        model_name, model_type, openai_api_key
+                        model_name, model_type, openai_api_key, anthropic_api_key, query=prompt
                     )
 
                     if qa_chain:
                         start_time = time.time()
-                        
+
                         with st.status("답변을 생성하고 있어요... 🤔", expanded=True) as status:
-                            st.write("📄 문서 검색 중...")
+                            if is_comparison:
+                                st.write("🔍 비교 질문 감지 - 상세 검색 중... (18개 문서)")
+                            else:
+                                st.write("📄 단순 질문 - 빠른 검색 중... (5개 문서)")
                             search_start = time.time()
                             
                             result = qa_chain.invoke({"query": prompt})

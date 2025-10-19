@@ -4,6 +4,48 @@ from langchain.schema import Document
 from pptx import Presentation
 import tempfile
 import os
+import re
+
+
+def parse_faq_markdown(text: str, source_name: str) -> List[Document]:
+    """
+    FAQ 형식의 마크다운을 파싱하여 각 FAQ 항목을 개별 Document로 변환
+
+    형식: [카테고리] 질문
+          답변...
+    """
+    documents = []
+
+    # [카테고리] 패턴으로 FAQ 항목 분리
+    # 패턴: [카테고리] 질문 형태를 찾음
+    faq_pattern = r'\[([^\]]+)\]\s*([^\n]+)\n((?:(?!\[)[^\n]*\n?)*)'
+
+    matches = re.finditer(faq_pattern, text, re.MULTILINE)
+
+    for match in matches:
+        category = match.group(1).strip()
+        question = match.group(2).strip()
+        answer = match.group(3).strip()
+
+        # 빈 답변 스킵
+        if not answer:
+            continue
+
+        # FAQ 전체 내용
+        full_content = f"[{category}] {question}\n{answer}"
+
+        doc = Document(
+            page_content=full_content,
+            metadata={
+                "source": source_name,
+                "category": category,
+                "question": question,
+                "type": "faq"
+            }
+        )
+        documents.append(doc)
+
+    return documents
 
 
 def load_documents(uploaded_files) -> List[Document]:
@@ -24,11 +66,24 @@ def load_documents(uploaded_files) -> List[Document]:
                     doc.metadata["source"] = uploaded_file.name
                 documents.extend(loaded_docs)
             elif file_extension in ['.md', '.markdown']:
-                loader = UnstructuredMarkdownLoader(tmp_file_path)
-                loaded_docs = loader.load()
-                for doc in loaded_docs:
-                    doc.metadata["source"] = uploaded_file.name
-                documents.extend(loaded_docs)
+                # FAQ 형식인지 확인
+                with open(tmp_file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+
+                # [카테고리] 패턴이 여러 개 있으면 FAQ 형식으로 판단
+                faq_pattern_count = len(re.findall(r'\[([^\]]+)\]\s*[^\n]+', content))
+
+                if faq_pattern_count >= 3:  # 3개 이상의 FAQ 항목이 있으면
+                    # FAQ 구조화 파싱 사용
+                    faq_docs = parse_faq_markdown(content, uploaded_file.name)
+                    documents.extend(faq_docs)
+                else:
+                    # 일반 Markdown으로 처리
+                    loader = UnstructuredMarkdownLoader(tmp_file_path)
+                    loaded_docs = loader.load()
+                    for doc in loaded_docs:
+                        doc.metadata["source"] = uploaded_file.name
+                    documents.extend(loaded_docs)
             elif file_extension == '.pptx':
                 prs = Presentation(tmp_file_path)
                 for slide_num, slide in enumerate(prs.slides, 1):
